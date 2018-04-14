@@ -4,6 +4,20 @@ var roleBuilder = require('role.builder');
 
 module.exports.loop = function () {
 
+  var tower = Game.getObjectById('228a48a3ea83166ed7473eee');
+  if(tower) {
+    var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
+      filter: (structure) => structure.hits < structure.hitsMax
+    });
+    if(closestDamagedStructure) {
+      tower.repair(closestDamagedStructure);
+    }
+    var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+    if(closestHostile) {
+      tower.attack(closestHostile);
+    }
+  }
+
   for(var name in Memory.creeps) {
     if(!Game.creeps[name]) {
       delete Memory.creeps[name];
