@@ -2,10 +2,20 @@ var roleUpgrader = {
 
   /** @param {Creep} creep **/
   run: function(creep) {
-    if(creep.carry.energy == 0) {
+
+    var recharging = creep.memory.recharging;
+
+    if (!recharging && creep.carry.energy == 0)
+      creep.memory.recharging=true;
+    if (recharging && creep.carry.energy == creep.carryCapacity)
+      creep.memory.recharging=false;
+    
+    if(creep.memory.recharging) {
+      console.log('Recharging');
       var sources = creep.room.find(FIND_SOURCES);
-      if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-        creep.moveTo(sources[0]);
+      var target = creep.pos.findClosestByRange(sources);
+      if(creep.harvest(target) == ERR_NOT_IN_RANGE) {
+        creep.moveTo(target);
       }
     }
     else {
