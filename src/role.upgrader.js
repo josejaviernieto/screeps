@@ -1,27 +1,32 @@
+var actions= require('actions');
+const ACTION_CHARGE=0;
+const ACTION_UPGRADE=2;
 var roleUpgrader = {
 
   /** @param {Creep} creep **/
   run: function(creep) {
-
-    var recharging = creep.memory.recharging;
-
-    if (!recharging && creep.carry.energy == 0)
-      creep.memory.recharging=true;
-    if (recharging && creep.carry.energy == creep.carryCapacity)
-      creep.memory.recharging=false;
     
-    if(creep.memory.recharging) {
-      console.log('Recharging');
-      var sources = creep.room.find(FIND_SOURCES);
-      var target = creep.pos.findClosestByRange(sources);
-      if(creep.harvest(target) == ERR_NOT_IN_RANGE) {
-        creep.moveTo(target);
+    if (creep.memory.actionFinished){
+      creep.memory.target = null;
+      switch (creep.memory.action) {
+	case undefined:
+	case ACTION_UPGRADE :
+	  creep.memory.action=ACTION_CHARGE;
+	  break;
+	  
+	case ACTION_CHARGE :
+	  creep.memory.action=ACTION_UPGRADE;
+	  break;
       }
     }
-    else {
-      if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
-        creep.moveTo(creep.room.controller);
-      }
+    switch (creep.memory.action) {
+      case ACTION_UPGRADE :
+	creep.memory.actionFinished=actions.upgrade(creep);
+	break;
+      case undefined :
+      case ACTION_CHARGE :
+	creep.memory.actionFinished=actions.charge(creep);
+	break;
     }
   }
 };

@@ -1,33 +1,34 @@
-var roleBuilder = {
+var actions= require('actions');
+const ACTION_CHARGE=0;
+const ACTION_BUILD=1;
 
-  /** @param {Creep} creep **/
+var roleBuilder = {actions,
+		   /** @param {Creep} creep **/
   run: function(creep) {
+    if (creep.memory.actionFinished){
+      creep.memory.target = null;
+      switch (creep.memory.action) {
+	case undefined :
+	case ACTION_BUILD :
+	  creep.memory.action=ACTION_CHARGE;
+	  break;
 
-    if(creep.memory.building && creep.carry.energy == 0) {
-      creep.memory.building = false;
-      creep.say('🔄 harvest');
-    }
-    if(!creep.memory.building && creep.carry.energy == creep.carryCapacity) {
-      creep.memory.building = true;
-      creep.say('🚧 build');
-    }
-
-    if(creep.memory.building) {
-      var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
-      if(targets.length) {
-        if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
-          creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
-        }
+	case ACTION_CHARGE :
+	  creep.memory.action=ACTION_BUILD;
+	  break;
       }
     }
-    else {
-      var sources = creep.room.find(FIND_SOURCES);
-      var target = creep.pos.findClosestByRange(sources);
-      if(creep.harvest(target) == ERR_NOT_IN_RANGE) {
-        creep.moveTo(target, {visualizePathStyle: {stroke: '#ffaa00'}});
-      }
+    switch (creep.memory.action) {
+      case ACTION_BUILD :
+	creep.memory.actionFinished=actions.build(creep);
+	break;
+      case undefined :
+      case ACTION_CHARGE :
+	creep.memory.actionFinished=actions.charge(creep);
+	break;
     }
   }
 };
 
 module.exports = roleBuilder;
+

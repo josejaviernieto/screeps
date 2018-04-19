@@ -1,27 +1,31 @@
-var roleHarvester = {
-
+var actions = require('actions') ;
+const ACTION_CHARGE=0;
+const ACTION_DISCHARGE=3;
+var roleHarvester = {actions,
+  /** run: Execute the action of the creep **/
   /** @param {Creep} creep **/
+
   run: function(creep) {
-    if(creep.carry.energy < creep.carryCapacity) {
-      var sources = creep.room.find(FIND_SOURCES);
-      var target = creep.pos.findClosestByRange(sources);
-      if(creep.harvest(target) == ERR_NOT_IN_RANGE) {
-        creep.moveTo(target);
+    if (creep.memory.actionFinished){
+      creep.memory.target = null;
+      switch (creep.memory.action) {
+	case undefined:
+	case ACTION_DISCHARGE :
+	  creep.memory.action=ACTION_CHARGE;
+	  break;
+	case ACTION_CHARGE :
+	  creep.memory.action=ACTION_DISCHARGE;
+	  break;
       }
     }
-    else {
-      var targets = creep.room.find(FIND_STRUCTURES, {
-	filter: (structure) => {
-          return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN  || structure.structureType == STRUCTURE_TOWER ) &&
-		 structure.energy < structure.energyCapacity;
-	}
-      });
-      
-      if(targets.length>0) {
-        if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-          creep.moveTo(targets[0]);
-        }
-      }
+    switch (creep.memory.action) {
+      case ACTION_DISCHARGE :
+	creep.memory.actionFinished=actions.discharge(creep);
+	break;
+      case undefined :
+      case ACTION_CHARGE :
+	creep.memory.actionFinished=actions.charge(creep);
+	break;
     }
   }
 };
