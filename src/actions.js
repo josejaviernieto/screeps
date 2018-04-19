@@ -35,8 +35,13 @@ var actions = {
 	creep.memory.target= target.id;
       } else return true;
     } else target= Game.getObjectById(creep.memory.target);
-    if(creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-      creep.moveTo(target);
+    switch (creep.transfer(target, RESOURCE_ENERGY)) {
+      case ERR_NOT_IN_RANGE:
+	creep.moveTo(target);
+	break;
+      case ERR_FULL:
+	creep.memory.target=null;
+	break;
     }
     return (creep.carry.energy == 0);
   },
