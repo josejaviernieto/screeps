@@ -21,6 +21,7 @@ module.exports.loop = function () {
     }
   }
 
+  var spawn = Game.spawns['Spawn1'];
   for(var name in Memory.creeps) {
     if(!Game.creeps[name]) {
       delete Memory.creeps[name];
@@ -29,20 +30,19 @@ module.exports.loop = function () {
   }
   var miners = _.filter(Game.creeps, (creep) => creep.memory.role == 'miner');
   if(miners.length < 1) {
-    generation.spawn('miner', Game.spawns['Homeworld']);
-  }
-
-  var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
-  if(harvesters.length < 2) {
-    generation.spawn('harvester', Game.spawns['Homeworld']);
-  }
-  var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
-  if(builders.length < 1) {
-    generation.spawn('builder', Game.spawns['Homeworld']);
+    generation.spawn('miner', spawn);
   }
   var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');  
   if(upgraders.length < 2) {
-    generation.spawn('upgrader', Game.spawns['Homeworld']);
+    generation.spawn('upgrader', spawn);
+  }
+  var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
+  if(builders.length < 1) {
+    generation.spawn('builder', spawn);
+  }
+  var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
+  if(harvesters.length < 2) {
+    generation.spawn('harvester', spawn);
   }
 
   

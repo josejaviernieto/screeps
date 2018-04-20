@@ -1,6 +1,6 @@
 function costOfBody(body){
   var cost = 0;
-  for (part in body)
+  for (var part in body)
     {
       cost+= BODYPART_COST[body[part]];
     }
