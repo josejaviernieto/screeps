@@ -1,6 +1,7 @@
 var roleHarvester = require('role.harvester');
 var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
+var roleMiner = require('role.miner');
 var generation = require('generation');
 
 
@@ -26,7 +27,11 @@ module.exports.loop = function () {
       console.log('Clearing non-existing creep memory:', name);
     }
   }
-  
+  var miners = _.filter(Game.creeps, (creep) => creep.memory.role == 'miner');
+  if(miners.length < 1) {
+    generation.spawn('miner', Game.spawns['Homeworld']);
+  }
+
   var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
   if(harvesters.length < 2) {
     generation.spawn('harvester', Game.spawns['Homeworld']);
@@ -52,6 +57,9 @@ module.exports.loop = function () {
 	break;
       case 'builder':
 	roleBuilder.run(creep);
+	break;
+      case 'miner':
+	roleMiner.run(creep);
 	break;
     }
   }

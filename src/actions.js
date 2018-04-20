@@ -1,10 +1,44 @@
 var actions = {
-  ACTION_CHARGE : 0,
-  ACTION_BUILD : 1,
-  ACTION_UPGRADE : 2,
-  ACTION_DISCHARGE : 3,
+  ACTION_CHARGE: 0,
+  ACTION_BUILD: 1,
+  ACTION_UPGRADE: 2,
+  ACTION_DISCHARGE: 3,
+  ACTION_HARVEST: 4,
+  ACTION_MOVE: 5,
   // In this action the creep take energy from a nearby source
   charge: function (creep) {
+    var target;
+    if (creep.memory.target==null) {
+      var containers = creep.room.find(FIND_STRUCTURES,{filter: (i)=> i.structureType == STRUCTURE_CONTAINER &&
+								    i.store[RESOURCE_ENERGY] > 0
+      });
+      var sources;
+      var links= creep.room.find(FIND_MY_STRUCTURES, { filter: (structure) => {return structure.structureType== STRUCTURE_LINK }});
+      if (!containers){
+	this.harvest(creep);
+      } else if(!creep.room.storage){
+	sources = containers;
+      } else if(!links) {
+	sources = creep.room.storage;
+      }
+      target = creep.pos.findClosestByRange(sources);
+      if (target != null){
+	creep.memory.target=target.id;
+      }
+    } else {
+      target = Game.getObjectById(creep.memory.target);
+    }
+    switch (creep.withdraw(target,RESOURCE_ENERGY)){
+      case ERR_NOT_IN_RANGE:
+	creep.moveTo(target);
+	break;
+      case ERR_NOT_ENOUGH_RESOURCES:
+	creep.memory.target=null;
+    }
+    return (creep.carry.energy == creep.carryCapacity)
+  },
+  
+  harvest: function (creep) {
     var target;
     if (creep.memory.target==null) {
       var sources = creep.room.find(FIND_SOURCES);
@@ -16,7 +50,7 @@ var actions = {
     if(creep.harvest(target) == ERR_NOT_IN_RANGE) {
       creep.moveTo(target);
     }
-    return (creep.carry.energy == creep.carryCapacity)
+    return (creep.carry.energy == creep.carryCapacity && creep.carryCapacity>0)
   },
 
 
@@ -24,12 +58,12 @@ var actions = {
   discharge: function(creep){
     var target;
     if (creep.memory.target==null) {
-    var targets = creep.room.find(FIND_STRUCTURES, {
-      filter: (structure) => {
-        return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN  || structure.structureType == STRUCTURE_TOWER ) &&
-	       structure.energy < structure.energyCapacity;
-      }
-    })
+      var targets = creep.room.find(FIND_STRUCTURES, {
+	filter: (structure) => {
+          return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN  || structure.structureType == STRUCTURE_TOWER ) &&
+		 structure.energy < structure.energyCapacity;
+	}
+      })
       if(targets.length>0) {
 	target=targets[0];
 	creep.memory.target= target.id;
@@ -70,6 +104,11 @@ var actions = {
       creep.moveTo(creep.room.controller);
     }
     return (creep.carry.energy == 0);
+  },
+  move:function(creep){
+    target =Game.getObjectById(creep.memory.target);
+    creep.moveTo(target);
+    return (creep.pos.x == target.pos.x)&& (creep.pos.y == target.pos.y);
   }
 }
 
