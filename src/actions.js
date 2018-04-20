@@ -114,9 +114,11 @@ var actions = {
   },
   move:function(creep){
     console.log(creep.name+' moving');
+    if (creep.memory.target != null){
     target =Game.getObjectById(creep.memory.target);
     creep.moveTo(target);
-    return (creep.pos.x == target.pos.x)&& (creep.pos.y == target.pos.y);
+      return (creep.pos.x == target.pos.x)&& (creep.pos.y == target.pos.y);}
+    else return true;
   }
 }
 

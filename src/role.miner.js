@@ -11,7 +11,10 @@ var roleMiner = {actions,
   run: function(creep){
     
     if (creep.memory.target== null){
-      creep.memory.target= this.findContainer(creep).id;
+
+      var tmp= this.findContainer(creep)
+      if (tmp!=null)
+	creep.memory.target= tmp.id;
     }
     if (creep.memory.actionFinished && creep.memory.action==actions.ACTION_MOVE) {
       creep.memory.target= null;
@@ -19,12 +22,15 @@ var roleMiner = {actions,
     }
     switch (creep.memory.action){
       case actions.ACTION_HARVEST:
-//	console.log('harvesting:'+creep.memory.target+'=>'+actions.move(creep));
+	//	console.log('harvesting:'+creep.memory.target+'=>'+actions.move(creep));
 	creep.memory.actionFinished = actions.harvest(creep);
 	break;
       case undefined:
-//	console.log('Nothing:'+creep.memory.target+'=>'+actions.move(creep));
-	creep.memory.target=this.findContainer(creep).id;
+	//	console.log('Nothing:'+creep.memory.target+'=>'+actions.move(creep));
+	var tmp= this.findContainer(creep)
+	if (tmp!=null)
+	  creep.memory.target= tmp.id;
+
 	creep.memory.action=actions.ACTION_MOVE;
       case actions.ACTION_MOVE:
 //	console.log('Moving:'+creep.memory.target+'=>'+actions.move(creep));

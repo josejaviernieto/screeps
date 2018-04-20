@@ -3,7 +3,7 @@ var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
 var roleMiner = require('role.miner');
 var generation = require('generation');
-
+var buildSpawnZone= require('build.spawnzone');
 
 module.exports.loop = function () {
 
@@ -21,7 +21,8 @@ module.exports.loop = function () {
     }
   }
 
-  var spawn = Game.spawns['Spawn1'];
+  var spawn = Game.spawns['Homeworld'];
+  buildSpawnZone.buildzone(spawn.pos);
   for(var name in Memory.creeps) {
     if(!Game.creeps[name]) {
       delete Memory.creeps[name];
