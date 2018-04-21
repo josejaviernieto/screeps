@@ -28,10 +28,10 @@ var roleMiner = {actions,
       case undefined:
 	//	console.log('Nothing:'+creep.memory.target+'=>'+actions.move(creep));
 	var tmp= this.findContainer(creep)
-	if (tmp!=null)
+	if (tmp!=null) {
 	  creep.memory.target= tmp.id;
-
-	creep.memory.action=actions.ACTION_MOVE;
+	  creep.memory.action=actions.ACTION_MOVE;
+	}
       case actions.ACTION_MOVE:
 //	console.log('Moving:'+creep.memory.target+'=>'+actions.move(creep));
 	creep.memory.actionFinished = actions.move(creep);

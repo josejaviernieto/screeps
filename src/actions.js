@@ -5,9 +5,10 @@ var actions = {
   ACTION_DISCHARGE: 3,
   ACTION_HARVEST: 4,
   ACTION_MOVE: 5,
+  ACTION_REPAIR: 6,
   // In this action the creep take energy from a nearby source
   charge: function (creep) {
-    console.log(creep.name+' charging');
+//    console.log(creep.name+' charging');
     var target;
     if (creep.memory.target==null || creep.memory.target== undefined) {
       var containers = creep.room.find(FIND_STRUCTURES,{filter: (i)=> i.structureType == STRUCTURE_CONTAINER &&
@@ -16,7 +17,7 @@ var actions = {
       var links= creep.room.find(FIND_MY_STRUCTURES, { filter: (structure) => {return structure.structureType== STRUCTURE_LINK }});
 
       if (creep.room.storage != undefined) {
-	console.log('Hay Storage');
+//	console.log('Hay Storage');
 	creep.memory.target= creep.room.storage.id;
 	target = creep.room.storage;
       }
@@ -35,6 +36,10 @@ var actions = {
 	creep.memory.target=null;
       case ERR_INVALID_TARGET:
 	actions.harvest(creep);
+	break;
+      case OK:
+	creep.memory.target=null;
+	break;
     }
     return (creep.carry.energy == creep.carryCapacity)
   },
@@ -118,13 +123,28 @@ var actions = {
     }
     return (creep.carry.energy == 0);
   },
-  move:function(creep){
+move:function(creep){
 //    console.log(creep.name+' moving');
     if (creep.memory.target != null){
     target =Game.getObjectById(creep.memory.target);
     creep.moveTo(target);
       return (creep.pos.x == target.pos.x)&& (creep.pos.y == target.pos.y);}
     else return true;
+  },
+  repair:function(creep){
+    if (creep.memory.target !=null){
+      target = Game.getObjectById(creep.memory.target);
+    } else {
+      target = closestDamagedStructure = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+	filter: (structure) => (structure.hits < structure.hitsMax) 
+      });
+      creep.memory.target=target.id;
+    }
+    switch (creep.repair(target)){
+      case ERR_NOT_IN_RANGE:
+	creep.moveTo(target);
+    }
+    return (creep.carry.energy==0 || target.hits==target.hitsMax);
   }
 }
 

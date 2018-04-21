@@ -5,13 +5,13 @@ var roleColector = {actions,
   /** @param {Creep} creep **/
 
   run: function(creep) {
-    if (creep.memory.actionFinished){
+    if (creep.memory.actionFinished || creep.memory.target==null){
       creep.memory.target = null;
       switch (creep.memory.action) {
 	case undefined:
 	case actions.ACTION_DISCHARGE :
-	  var containers = creep.room.find(FIND_STRUCTURES,{filter: (i) => i.structureType == STRUCTURE_CONTAINER && _.sum(i.store)/i.storeCapacity>0});
-	  targets= containers.sort(function cmp(a,b){_.sum(a.store)>_.sum(b.store)});
+	  var containers = creep.room.find(FIND_STRUCTURES,{filter: (i) => i.structureType == STRUCTURE_CONTAINER});
+	  targets= containers.sort(function cmp(a,b){return _.sum(a.store)<_.sum(b.store)});
 	  if (targets.length>0) creep.memory.target= targets[0].id;
 	  creep.memory.action=actions.ACTION_CHARGE;
 	  break;

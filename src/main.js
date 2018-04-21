@@ -11,16 +11,18 @@ module.exports.loop = function () {
 
   var tower = Game.getObjectById('5ad7db1657bd341b810fa69b');
   if(tower) {
+    var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+    if(closestHostile) {
+      tower.attack(closestHostile);
+    } else {
     var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-      filter: (structure) => (structure.hits < structure.hitsMax) && (structure.hits <80000)
+      filter: (structure) => (structure.hits < structure.hitsMax && structure.hits<10000) 
     });
     if(closestDamagedStructure) {
       tower.repair(closestDamagedStructure);
     }
-    var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-    if(closestHostile) {
-      tower.attack(closestHostile);
     }
+
   }
 
   var spawn = Game.spawns['Homeworld'];
@@ -35,27 +37,28 @@ module.exports.loop = function () {
   }
   var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
   if ((spawn.room.energyAvailable==spawn.room.energyCapacityAvailable) || harvesters.length==0 ){
-    var miners = _.filter(Game.creeps, (creep) => creep.memory.role == 'miner');
-    if(miners.length < 3) {
-      generation.spawn('miner', spawn);
-    }
+
     var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');  
     if(upgraders.length < 2) {
       generation.spawn('upgrader', spawn);
     }
     var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
-    if(builders.length < 3) {
+    if(builders.length < 1) {
     generation.spawn('builder', spawn);
   }
     var colectors = _.filter(Game.creeps, (creep) => creep.memory.role == 'colector');
-    if(colectors.length < 3) {
+    if(colectors.length < 2) {
       generation.spawn('colector', spawn);
     } 
-    if(harvesters.length < 2) {
+    if(harvesters.length < 1) {
     generation.spawn('harvester', spawn);
-  }
+    }
+    var miners = _.filter(Game.creeps, (creep) => creep.memory.role == 'miner');
+    if(miners.length < 2) {
+      generation.spawn('miner', spawn);
+    }
 
-}
+  }
   
   for(var name in Game.creeps) {
     var creep = Game.creeps[name];

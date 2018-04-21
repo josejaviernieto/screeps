@@ -12,7 +12,7 @@ var generation = {
   BODY_MINER: 1,
   BODY_CARRIER: 2,
   BODY_GROW : { 
-    0 :[WORK,MOVE],
+    0 :[WORK,CARRY,MOVE],
     1: [WORK],
     2: [CARRY,CARRY,MOVE],
   },
@@ -22,12 +22,13 @@ var generation = {
     2: [CARRY,CARRY,MOVE],
   },
 
-  body : function (tipe, energy) {
+  body : function (tipe, energy,size=MAX_CREEP_SIZE) {
     
     var body=generation.BODY_BASE[tipe];
+    var maxfact= size-body.length/this.BODY_GROW[tipe].length;   
     var fact = (energy-costOfBody(body))/costOfBody(this.BODY_GROW[tipe]);
-
-    for (i=1; i<fact; i++){
+    if (fact>maxfact) fact=maxfact;
+    for (i=1; i<=fact; i++){
       body=body.concat(this.BODY_GROW[tipe]);
     }
 //    console.log(costOfBody(body));
@@ -40,12 +41,14 @@ var generation = {
     switch (rol){
       case 'miner':
 	tipe=generation.BODY_MINER;
+	var size=7;
 	break;
       case 'colector':
+      case 'harvester':
 	tipe=generation.BODY_CARRIER;
     }
 
-    spawn.spawnCreep(generation.body(tipe, spawn.room.energyAvailable), newName, 
+    spawn.spawnCreep(generation.body(tipe, spawn.room.energyAvailable,size), newName, 
 		     {memory: {role: rol}});
   }
   

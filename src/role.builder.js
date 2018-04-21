@@ -10,13 +10,24 @@ var roleBuilder = {actions,
 	case actions.ACTION_BUILD :
 	  creep.memory.action=actions.ACTION_CHARGE;
 	  break;
-
+	case actions.ACTION_REPAIR:
+	  if (creep.carry.energy==0) creep.memory.action=actions.ACTION_CHARGE;
+	  break;
 	case actions.ACTION_CHARGE :
-	  creep.memory.action=actions.ACTION_BUILD;
+	  var target = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES);
+	  if (target) {
+	    creep.memory.target=target.id;
+	    creep.memory.action=actions.ACTION_BUILD;
+	  } else {
+	    creep.memory.action=actions.ACTION_REPAIR;
+	  };
 	  break;
       }
     }
     switch (creep.memory.action) {
+      case actions.ACTION_REPAIR:
+	creep.memory.actionFinished=actions.repair(creep);
+	break;
       case actions.ACTION_BUILD :
 	creep.memory.actionFinished=actions.build(creep);
 	break;
