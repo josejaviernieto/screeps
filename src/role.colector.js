@@ -1,0 +1,38 @@
+var actions = require('actions') ;
+
+var roleColector = {actions,
+		     /** run: Execute the action of the creep **/
+  /** @param {Creep} creep **/
+
+  run: function(creep) {
+    if (creep.memory.actionFinished){
+      creep.memory.target = null;
+      switch (creep.memory.action) {
+	case undefined:
+	case actions.ACTION_DISCHARGE :
+	  var containers = creep.room.find(FIND_STRUCTURES,{filter: (i) => i.structureType == STRUCTURE_CONTAINER && _.sum(i.store)/i.storeCapacity>0});
+	  targets= containers.sort(function cmp(a,b){_.sum(a.store)>_.sum(b.store)});
+	  if (targets.length>0) creep.memory.target= targets[0].id;
+	  creep.memory.action=actions.ACTION_CHARGE;
+	  break;
+	case actions.ACTION_CHARGE :
+	  creep.memory.target=creep.room.storage.id;
+	  creep.memory.action=actions.ACTION_DISCHARGE;
+	  break;
+      }
+    }
+    switch (creep.memory.action) {
+      case actions.ACTION_DISCHARGE :
+	creep.memory.actionFinished=actions.discharge(creep);
+	break;
+      case undefined :
+	creep.memory.actionFinished=true;
+	break;
+      case actions.ACTION_CHARGE :
+	creep.memory.actionFinished=actions.charge(creep);
+	break;
+    }
+  }
+};
+
+module.exports = roleColector;

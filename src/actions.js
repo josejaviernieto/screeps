@@ -13,19 +13,17 @@ var actions = {
       var containers = creep.room.find(FIND_STRUCTURES,{filter: (i)=> i.structureType == STRUCTURE_CONTAINER &&
 								    i.store[RESOURCE_ENERGY] > 0
       });
-      var sources;
       var links= creep.room.find(FIND_MY_STRUCTURES, { filter: (structure) => {return structure.structureType== STRUCTURE_LINK }});
-      if (!containers){
-	this.harvest(creep);
-      } else if(!creep.room.storage){
-	sources = containers;
-      } else if(!links) {
-	sources = creep.room.storage;
+
+      if (creep.room.storage != undefined) {
+	console.log('Hay Storage');
+	creep.memory.target= creep.room.storage.id;
+	target = creep.room.storage;
       }
-      target = creep.pos.findClosestByRange(sources);
+      
       if (target != null){
 	creep.memory.target=target.id;
-      }
+      } 
     } else {
       target = Game.getObjectById(creep.memory.target);
     }
@@ -38,11 +36,11 @@ var actions = {
       case ERR_INVALID_TARGET:
 	actions.harvest(creep);
     }
-  return (creep.carry.energy == creep.carryCapacity)
+    return (creep.carry.energy == creep.carryCapacity)
   },
   
   harvest: function (creep) {
-    console.log(creep.name+' harvesting');
+    //  console.log(creep.name+' harvesting');
     var target;
     if (creep.memory.target==null) {
       var sources = creep.room.find(FIND_SOURCES);
@@ -51,8 +49,16 @@ var actions = {
     } else {
       target = Game.getObjectById(creep.memory.target);
     }
-    if(creep.harvest(target) == ERR_NOT_IN_RANGE) {
-      creep.moveTo(target);
+    switch(creep.harvest(target)){
+      case ERR_NOT_IN_RANGE:
+	creep.moveTo(target);
+	break;
+      case ERR_INVALID_TARGET:
+	creep.memory.target=null;
+	break;
+      case ERR_NO_BODYPART:
+	creep.memory.target=null;
+	console.log("ERROR LOGICO: Action: HARVEST, Creep: "+creep.name);
     }
     return (creep.carry.energy == creep.carryCapacity && creep.carryCapacity>0)
   },
@@ -60,7 +66,7 @@ var actions = {
 
   // In this action the creep put energy on a structure.
   discharge: function(creep){
-    console.log(creep.name+' discharging');    
+    //    console.log(creep.name+' discharging');    
     var target;
     if (creep.memory.target==null) {
       var targets = creep.room.find(FIND_STRUCTURES, {
@@ -70,7 +76,7 @@ var actions = {
 	}
       })
       if(targets.length>0) {
-	target=targets[0];
+	target=creep.pos.findClosestByPath(targets);
 	creep.memory.target= target.id;
       } else return true;
     } else target= Game.getObjectById(creep.memory.target);
@@ -88,7 +94,7 @@ var actions = {
   
   // In this action the creep build a construction site;
   build: function(creep){
-    console.log(creep.name+' Building');
+//  console.log(creep.name+' Building');
     var target
     if (creep.memory.target == null) {
       var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
@@ -100,20 +106,20 @@ var actions = {
     if(creep.build(target) == ERR_NOT_IN_RANGE) {
       creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
     }
-    return (creep.carry.energy == 0);
+    return (creep.carry.energy == 0 || target==undefined );
   },
 
   
   // In this action the creep will upgrade the controller;
   upgrade: function(creep){
-    console.log(creep.name+' upgrading');
+    //    console.log(creep.name+' upgrading');
     if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
       creep.moveTo(creep.room.controller);
     }
     return (creep.carry.energy == 0);
   },
   move:function(creep){
-    console.log(creep.name+' moving');
+//    console.log(creep.name+' moving');
     if (creep.memory.target != null){
     target =Game.getObjectById(creep.memory.target);
     creep.moveTo(target);
