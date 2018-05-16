@@ -10,12 +10,20 @@ var roleColector = {actions,
       switch (creep.memory.action) {
 	case undefined:
 	case actions.ACTION_DISCHARGE :
-	  var containers = creep.room.find(FIND_STRUCTURES,{filter: (i) => i.structureType == STRUCTURE_CONTAINER});
-	  targets= containers.sort(function cmp(a,b){return _.sum(a.store)<_.sum(b.store)});
-	  if (targets.length>0) creep.memory.target= targets[0].id;
-	  creep.memory.action=actions.ACTION_CHARGE;
+	  target = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES);
+	  if (target) {
+	    creep.memory.action=actions.ACTION_PICKUP;
+	    creep.memory.target= target.id;
+	  } else {
+	    var containers = creep.room.find(FIND_STRUCTURES,{filter: (i) => i.structureType == STRUCTURE_CONTAINER});
+	    targets= containers.sort(function cmp(a,b){return _.sum(a.store)<_.sum(b.store)});
+	    if (targets.length>0) creep.memory.target= targets[0].id;
+	    creep.memory.action=actions.ACTION_CHARGE;
+	  }
 	  break;
 	case actions.ACTION_CHARGE :
+	case actions.ACTION_PICKUP :
+	  
 	  creep.memory.target=creep.room.storage.id;
 	  creep.memory.action=actions.ACTION_DISCHARGE;
 	  break;
@@ -30,6 +38,9 @@ var roleColector = {actions,
 	break;
       case actions.ACTION_CHARGE :
 	creep.memory.actionFinished=actions.charge(creep);
+	break;
+      case actions.ACTION_PICKUP :
+	creep.memory.actionFinished=actions.pickup(creep);
 	break;
     }
   }

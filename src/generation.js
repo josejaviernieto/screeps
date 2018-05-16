@@ -44,12 +44,18 @@ var generation = {
 	var size=7;
 	break;
       case 'colector':
-      case 'harvester':
+  
 	tipe=generation.BODY_CARRIER;
     }
-
+if (rol == 'remoteBuilder') {
+    spawn.spawnCreep(generation.body(tipe, spawn.room.energyAvailable,size), newName, 
+		     {memory: {role: rol,flag: 'builder1'}});
+    
+} else {
     spawn.spawnCreep(generation.body(tipe, spawn.room.energyAvailable,size), newName, 
 		     {memory: {role: rol}});
+    
+}
   }
   
 };

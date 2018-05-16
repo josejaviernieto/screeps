@@ -6,6 +6,8 @@ var actions = {
   ACTION_HARVEST: 4,
   ACTION_MOVE: 5,
   ACTION_REPAIR: 6,
+  ACTION_PICKUP: 7,
+  ACTION_RENEW:8,
   // In this action the creep take energy from a nearby source
   charge: function (creep) {
 //    console.log(creep.name+' charging');
@@ -15,8 +17,7 @@ var actions = {
 								    i.store[RESOURCE_ENERGY] > 0
       });
       var links= creep.room.find(FIND_MY_STRUCTURES, { filter: (structure) => {return structure.structureType== STRUCTURE_LINK }});
-
-      if (creep.room.storage != undefined) {
+      if (creep.room.storage != undefined && creep.room.storage.store[RESOURCE_ENERGY]>0) {
 //	console.log('Hay Storage');
 	creep.memory.target= creep.room.storage.id;
 	target = creep.room.storage;
@@ -44,16 +45,22 @@ var actions = {
     return (creep.carry.energy == creep.carryCapacity)
   },
   
-  harvest: function (creep) {
+  harvest: function (creep,target = null) {
     //  console.log(creep.name+' harvesting');
-    var target;
-    if (creep.memory.target==null) {
-      var sources = creep.room.find(FIND_SOURCES);
-      target = creep.pos.findClosestByRange(sources);
-      creep.memory.target=target.id;
+    if (target==null){
+//      console.log('target no asignado');
+      if (creep.memory.target==null) {
+	var sources = creep.room.find(FIND_SOURCES);
+	target = (creep.pos.findClosestByRange(sources)).id;
+	creep.memory.target=target;
+      } else {
+	target=creep.memory.target
+      }
     } else {
-      target = Game.getObjectById(creep.memory.target);
+      console.log('Asignando Target:'+ target);
+      creep.memory.target=target;
     }
+    target = Game.getObjectById(creep.memory.target);
     switch(creep.harvest(target)){
       case ERR_NOT_IN_RANGE:
 	creep.moveTo(target);
@@ -70,22 +77,31 @@ var actions = {
 
 
   // In this action the creep put energy on a structure.
-  discharge: function(creep){
+  discharge: function(creep, target = null){
     //    console.log(creep.name+' discharging');    
-    var target;
-    if (creep.memory.target==null) {
-      var targets = creep.room.find(FIND_STRUCTURES, {
-	filter: (structure) => {
-          return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN  || structure.structureType == STRUCTURE_TOWER ) &&
-		 structure.energy < structure.energyCapacity;
-	}
-      })
-      if(targets.length>0) {
-	target=creep.pos.findClosestByPath(targets);
-	creep.memory.target= target.id;
-      } else return true;
-    } else target= Game.getObjectById(creep.memory.target);
+    if (target==null) {
+      if (creep.memory.target==null){
+	var targets = creep.room.find(FIND_STRUCTURES, {
+	  filter: (structure) => {
+            return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN  || (structure.structureType == STRUCTURE_TOWER && structure.energy < structure.energyCapacity*0.5 )) &&
+		   structure.energy < structure.energyCapacity;
+	  }
+	})
+	if(targets.length>0) {
+	  target=creep.pos.findClosestByPath(targets);
+	  creep.memory.target= target.id;
+	} else return true;
+      } else {
+	 target = creep.memory.target;
+      }
+    } else {
+      creep.memory.target=target;
+    }
+      target= Game.getObjectById(target);
+
     switch (creep.transfer(target, RESOURCE_ENERGY)) {
+      case OK:
+	creep.memory.target=null;
       case ERR_NOT_IN_RANGE:
 	creep.moveTo(target);
 	break;
@@ -123,28 +139,81 @@ var actions = {
     }
     return (creep.carry.energy == 0);
   },
-move:function(creep){
-//    console.log(creep.name+' moving');
-    if (creep.memory.target != null){
-    target =Game.getObjectById(creep.memory.target);
+  move:function(creep,target=null){
+    //    console.log(creep.name+' moving');
+    if (target==null){
+      if (creep.memory.target == null){
+	return true;
+      } else {
+	target= creep.memory.target;
+      }
+    }
+//    console.log('Creep:' + creep.name +'Moving to ' + target);
+    target = Game.getObjectById(target);
     creep.moveTo(target);
-      return (creep.pos.x == target.pos.x)&& (creep.pos.y == target.pos.y);}
-    else return true;
+    return (creep.pos.x == target.pos.x)&& (creep.pos.y == target.pos.y);
   },
+  
   repair:function(creep){
     if (creep.memory.target !=null){
       target = Game.getObjectById(creep.memory.target);
     } else {
-      target = closestDamagedStructure = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-	filter: (structure) => (structure.hits < structure.hitsMax) 
+      //      target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+      //	filter: (structure) => (structure.hits < structure.hitsMax) 
+      //      });
+      targets = creep.room.find(FIND_STRUCTURES, {
+	filter: (structure) => (structure.hits < structure.hitsMax)
       });
-      creep.memory.target=target.id;
+      targets= targets.sort((a,b) =>a.hits-b.hits);
+      target= targets[0];
+      
+	creep.memory.target=target.id;
     }
     switch (creep.repair(target)){
       case ERR_NOT_IN_RANGE:
 	creep.moveTo(target);
     }
     return (creep.carry.energy==0 || target.hits==target.hitsMax);
+  },
+
+  pickup:function (creep,target=null){
+    if (target==null) {
+      if (creep.memory.target==null){
+	target = (creep.pos.findClosestByRange(FIND_DROPPED_ENERGY)).id;
+	memory.target=target;
+      } else {
+	target = creep.memory.target;
+      }
+    } else memory.target= target;
+    target=Game.getObjectById(target);
+    switch (creep.pickup(target)){
+      case OK:
+        target=null;
+	creep.memory.target=null;
+	break;
+      case ERR_NOT_IN_RANGE:
+	creep.moveTo(target);
+	break;
+      default:
+	target=null;
+	creep.memory.target=null;
+	console.log('ERROR NO RECONOCIDO');
+    }
+    return (target==null);
+  },
+  rejuvenate:function (creep,target=null){
+    if (creep.memory.target==null) {
+      spawn= creep.pos.findClosestByPath(FIND_MY_SPAWNS);
+      creep.memory.target=spawn.id;
+    } else {
+      spawn=Game.getObjectById(creep.memory.target);
+    }
+    actionResult= spawn.renewCreep(creep);
+    switch (actionResult){
+      case ERR_NOT_IN_RANGE:
+	creep.moveTo(spawn);
+    }
+    return creep.ticksToLive == CREEP_LIFE_TIME;
   }
 }
 

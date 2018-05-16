@@ -3,9 +3,11 @@ var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
 var roleMiner = require('role.miner');
 var roleColector = require('role.colector');
+var roleRemoteMiner = require('role.remoteMiner');
 var generation = require('generation');
 var buildSpawnZone= require('build.spawnzone');
 var buildRoad= require('build.road');
+var roleRemoteBuilder = require('role.remotebuilder')
 
 module.exports.loop = function () {
 
@@ -22,10 +24,11 @@ module.exports.loop = function () {
       tower.repair(closestDamagedStructure);
     }
     }
-
   }
 
-  var spawn = Game.spawns['Homeworld'];
+  
+  for (var spawnName in Game.spawns) {
+  var spawn = Game.spawns[spawnName];    
   buildSpawnZone.buildzone(spawn.pos);
   //  buildRoad.buildPerimeter(spawn.pos);
   //buildRoad.buildPath(spawn.room.storage.pos,Game.getObjectById('5ad8070d7ba7ef405947decc').pos);
@@ -36,30 +39,39 @@ module.exports.loop = function () {
     }
   }
   var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
-  if ((spawn.room.energyAvailable==spawn.room.energyCapacityAvailable) || harvesters.length==0 ){
-
+  
+  if ((spawn.room.energyAvailable==spawn.room.energyCapacityAvailable) || harvesters.length<=1 ){
+    var remoteMiners = _.filter(Game.creeps, (creep) => creep.memory.role == 'remoteMiner');  
+    if(remoteMiners.length < 1) {
+      // generation.spawn('remoteMiner', spawn);
+    }
+    
     var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');  
     if(upgraders.length < 2) {
       generation.spawn('upgrader', spawn);
     }
-    var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
-    if(builders.length < 1) {
-    generation.spawn('builder', spawn);
-  }
+  
     var colectors = _.filter(Game.creeps, (creep) => creep.memory.role == 'colector');
-    if(colectors.length < 2) {
+    if(colectors.length < 3) {
       generation.spawn('colector', spawn);
     } 
-    if(harvesters.length < 1) {
+    if(harvesters.length < 2) {
     generation.spawn('harvester', spawn);
     }
     var miners = _.filter(Game.creeps, (creep) => creep.memory.role == 'miner');
     if(miners.length < 2) {
       generation.spawn('miner', spawn);
     }
-
+  var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
+    if(builders.length < 1) {
+    generation.spawn('builder', spawn);
   }
-  
+  var remoteBuilders = _.filter(Game.creeps, (creep) => creep.memory.role == 'remoteBuilder');
+    if(remoteBuilders.length < 1) {
+    generation.spawn('remoteBuilder', spawn);
+  }
+  }
+  }
   for(var name in Game.creeps) {
     var creep = Game.creeps[name];
     switch (creep.memory.role) {
@@ -77,6 +89,13 @@ module.exports.loop = function () {
 	break;
       case 'colector':
 	roleColector.run(creep);
+	break;
+      case 'remoteMiner':
+	roleRemoteMiner.run(creep);
+	break;
+	case 'remoteBuilder':
+	    roleRemoteBuilder.run(creep);
     }
+    
   }
 }
